@@ -1,0 +1,177 @@
+.tab-data-title-double{
+    padding-right: 4vw !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tab-data-title h1{
+    display: inline-block;
+}
+
+
+/* 
+------------------------------------------------------------
+|                         Spacing                          |
+------------------------------------------------------------
+*/
+.detail{
+    margin-top: 1.75vh !important;
+}
+.build-section, .rename-section{
+    margin: 30px 0 !important;
+}
+
+.tab-data-body-half{
+    display: flex;
+}
+.tab-data-body-half div{
+    width: 50%;
+}
+
+
+/* 
+------------------------------------------------------------
+|                   Task Home Buttons                      |
+------------------------------------------------------------
+*/
+.lg-btn-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+.lg-btn-container a{
+    width: 100%;
+}
+.btn-lg{
+    height: 15vh;
+    margin: 1.5vh 0 !important;
+    padding-left: 5% !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #FFF;
+    border: 2px solid transparent;
+}
+.btn-lg:hover{
+    background-color: transparent;
+    cursor: pointer;
+}
+.btn-lg span{
+    font-size: 10pt;
+}
+
+.btn-lg-blue{
+    background-color: #059;
+}
+.btn-lg-blue:hover{
+    color: #059;
+    border-color: #059;
+}
+.btn-lg-green{
+    background-color: #095;
+}
+.btn-lg-green:hover{
+    color: #095;
+    border-color: #095;
+}
+.btn-lg-cyan{
+    background-color: #099;
+}
+.btn-lg-cyan:hover{
+    color: #099;
+    border-color: #099;
+}
+
+
+/* 
+------------------------------------------------------------
+|                       Settings Page                       |
+------------------------------------------------------------
+*/
+.radio-grp{
+    margin-top: 1vh !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.rename-bot{
+    width: 30%;
+    height: 6vh;
+    margin-top: 1vh !important;
+    padding-left: 2.5% !important;
+}
+
+
+/* 
+------------------------------------------------------------
+|                        Field Page                        |
+------------------------------------------------------------
+*/
+.field-type-list{
+    margin-bottom: 30px !important;
+}
+.field-card{
+    width: 80%;
+    margin-top: 7vh !important;
+    background-color: #FFF;
+    border-radius: 9px;
+    box-shadow: 0 4px 7px 0 #0007;
+}
+.field-card:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 7px 7px 0 #0009;
+}
+.field-card-title{
+    padding: 2% 5% !important;
+    background-color: #CCC;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 9px 9px 0 0;
+    border-bottom: 1px solid #777;
+}
+.field-card-body{
+    padding: 1.5% 3% !important;
+    background-color: #FFF;
+    border-radius: 0 0 9px 9px;
+}
+.body-title{
+    display: flex;
+    justify-content: space-between;
+}
+.body-title span{
+    font-size: 14pt;
+}
+.sqr-btn{
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: 16pt;
+    border-radius: 4px;
+}
+.grey-sqr-btn{
+    background-color: #CCC;
+    color: #333;
+    border: 2px solid #555;
+}
+
+.field-values-list{
+    width: 85%;
+    margin: 7px 7.5% !important;
+}
+.field-value-container{
+    margin-top: 10px !important;
+    display: flex;
+    justify-content: space-between;
+}
+.field-value-container span{
+    width: 80%;
+    padding: 5px 3% !important;
+    background-color: #CCC;
+}

@@ -1,0 +1,157 @@
+body{
+    padding-top: 0 !important;
+    display: flex;
+    flex-direction: column;
+    background-color: #123;
+    color: #FFF;
+}
+
+/* 
+------------------------------------------------------------
+|                     Form Section                         |
+------------------------------------------------------------
+*/
+.form-side{
+    height: 50vh;
+    background-color: #FFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+.login-title{
+    color: #123;
+    text-align: center;
+    font-size: 5vh;
+    font-family: 'Share', cursive;
+}
+.form{
+    width: 80%;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 
+------------------------------------------------------------
+|                       Form Button                         |
+------------------------------------------------------------
+*/
+.btn{
+    width: 50%;
+    background-color: #123D;
+    color: #FFF;
+    border: none;
+    transition: 250ms;
+}
+.btn:hover, .btn:focus{
+    width: 45%;
+    background-color: #123;
+    color: #FFF;
+    font-weight: 600;
+    border-radius: 24px;
+}
+
+
+/* 
+------------------------------------------------------------
+|                    Image Section                         |
+------------------------------------------------------------
+*/
+.image-side{
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+}
+.img-title{
+    text-align: center;
+    font-size: 5vh;
+    font-family: 'Share', cursive;
+}
+.strong{
+    font-weight: bold;
+}
+.bot-img{
+    width: 50vw;
+    height: 50vw;
+    animation-name: hover;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+
+/* 
+------------------------------------------------------------
+|                    Large Portrait                        |
+------------------------------------------------------------
+*/
+@media (min-width: 720px) and (orientation: portrait)
+{
+    .form-side{
+        height: 40vh;
+    }
+    .image-side{
+        height: 60vh;
+    }
+}
+
+
+/* 
+------------------------------------------------------------
+|                        Landscape                         |
+------------------------------------------------------------
+*/
+@media (orientation: landscape)
+{
+    body{
+        flex-direction: row;
+    }
+
+    .form-side{
+        width: 50vw;
+        height: 100vh;
+        justify-content: start;
+    }
+    .form-title-div{
+        height: 10vh;
+        margin-top: 20vh !important;
+    }
+    .form{
+        height: 33vh;
+        margin-top: 10vh !important;
+    }
+    input{
+        height: 7vh;
+        margin-top: 6vh !important;
+        height: 110%;
+    }
+    .input{
+        width: 80%;
+    }
+    input:first-child{
+        margin-top: 0!important;
+    }
+
+    .image-side{
+        width: 48vw;
+        height: 100vh;
+        justify-content: flex-start;
+    }
+    .img-title-div{
+        height: 30vh;
+        margin-top: 15vh !important;
+    }
+    .bot-img{
+        width: 60%;
+        height: 60%;
+    }
+}
+
+@keyframes hover{
+    0% {transform: translateY(0);}
+    60% {transform: translateY(-1.25vh);}
+}

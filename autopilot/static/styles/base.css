@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=Share&display=swap');
+
+*{
+    margin: 0 !important;
+    padding: 0 !important;
+    outline: none;
+    transition: 300ms;
+}
+
+html{
+    scroll-behavior: smooth;
+}
+
+body{
+    padding-top: 15vh !important;
+    overflow-x: hidden;
+}
+
+a{
+    text-decoration: none;
+}
+
+
+/* 
+------------------------------------------------------------
+|                  Colors & Text Transformations            |
+------------------------------------------------------------
+*/
+.bg-my-primary{
+    background-color: #123 !important;
+}
+
+.text-my-aqua{
+    color: #4CEEDF;
+}
+
+.note{
+    margin-left: 3% !important;
+    color: #666;
+}
+
+.text-align-center{
+    text-align: center;
+}
+
+.upper{
+    text-transform: uppercase;
+}
+
+
+
+/* 
+------------------------------------------------------------
+|                          Inputs                          |
+------------------------------------------------------------
+*/
+.input-tag{
+    height: 7vh;
+    border-radius: 9px;
+}
+.input{
+    width: 100%;
+    color: #123C;
+    padding-left: 5% !important;
+    border: 1px solid #1234;
+}
+.input::placeholder{
+    color: #1237;
+}
+.input:focus{
+    color: #123A;
+    border-width: 2px;
+    border-color: #1238;
+}
+
+/* 
+------------------------------------------------------------
+|                          Navbar                          |
+------------------------------------------------------------
+*/
+.my-main-nav{
+    min-height: 10vh;
+    padding: 0 5% !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    font-family: 'Share', cursive;
+    z-index: 2;
+}
+.navbar-brand{
+    display: flex;
+    align-items: center;
+    font-size: 4vh;
+}
+.my-main-nav-logo{
+    min-height: 30px;
+    max-height: 9vh;
+    animation: brandLogoTranslate 3s infinite;
+    animation-play-state: running;
+
+}
+.nav-item{
+    margin-left: 15px !important;
+}
+@keyframes brandLogoTranslate {
+    0%{transform: translateY(3px);}
+    60%{transform: translateY(-3px);}
+    100%{transform: translateY(3px);}
+}
+
+
+/* 
+------------------------------------------------------------
+|                          Dashoard                        |
+------------------------------------------------------------
+*/
+.dashboard-side-bar{
+    width: 15vw;
+    height: 90vh;
+    position: fixed;
+    top: 10vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #345;
+    font-family: 'Share', cursive;
+}
+.dashboard-btn{
+    width: 100%;
+    padding: 5% !important;
+    border-top: 1px solid #FFF;
+    border-bottom: 1px solid #FFF;
+    background-color: transparent;
+    color: #FFF;
+    text-align: left;
+    font-size: 3vh;
+}
+.dashboard-btn:hover, .dashboard-btn:focus{
+    background-color: #234;
+    color: #FFF;
+}
+.active-dashboard{
+    background-color: #012;
+}
+.active-dashboard:hover, .active-dashboard:focus{
+    background-color: #123;
+}
+
+
+/* 
+------------------------------------------------------------
+|                         Tab Data                         |
+------------------------------------------------------------
+*/
+.dashboard-tab-container{
+    display: flex;
+    flex-direction: column;
+}
+.tab-data{
+    width: 85vw;
+    min-height: 90vh;
+    margin-top: -5vh !important;
+    margin-left: 15vw !important;
+    padding: 4vw !important;
+    background-color: #EEF;
+    display: none;
+    font-family: 'Share', cursive;
+}
+.active-tab{
+    display: block;
+}
+.tab-data-title h1{
+    color: #123;
+    font-size: 6vh;
+}
+.tab-data-body{
+    margin-top: 5vh !important;
+}
+
+
+/* 
+------------------------------------------------------------
+|                           Table                          |
+------------------------------------------------------------
+*/
+table{
+    width: 90% !important;
+    margin: 5vh 5vw !important;
+    border-color: #123 !important;
+}
+thead{
+    background-color: #123;
+    color: #FFF;
+    text-align: center;
+    border-color: #FFF !important;
+}
+tr{
+    cursor: pointer;
+}
+tr:hover{
+    background-color: #1234;
+}
+th, td{
+    padding: 5px 0 !important;
+}
+td{
+    padding-left: 5% !important;
+    color: #111;
+}
+
+
+/* 
+------------------------------------------------------------
+|                         Buttons                          |
+------------------------------------------------------------
+*/
+button{
+    border: none;
+}
+
+.fab{
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    position: fixed;
+    bottom: 5vh;
+    right: 5vh;
+    background-color: #345;
+    color: #EEE;
+    font-size: 250%;
+    transition: 300ms;
+    font-family: 'Share', cursive;
+    z-index: 2;
+}
+.fab:hover, .fab:focus{
+  background-color: #1a2732;
+  transform: rotate(-360deg);
+}
+
+.my-btn{
+    padding: 3px 10px !important;
+    background-color: transparent;
+    border-radius: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.my-btn:hover, .my-btn:focus{
+    color: #FFF;
+}
+.my-btn-blue{
+    color: #07A;
+    border: 2px solid #07A;
+}
+.my-btn-blue:hover, .my-btn-blue:focus{
+    background-color: #07A;
+}
+.my-btn-red{
+    color: #A00;
+    border: 2px solid #A00;
+}
+.my-btn-red:hover, .my-btn-red:focus{
+    background-color: #A00;
+}
+
+
+/* 
+------------------------------------------------------------
+|                         Pop-Up                           |
+------------------------------------------------------------
+*/
+.overlay{
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #0009;
+    transform: scale(0);
+}
+.pop-up{
+    width: 36vw;
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    background-color: #FFF;
+    border-radius: 10px;
+}
+.pop-up-title{
+    font-size: 4vh;
+    text-align: center;
+}
+#prompt_input{
+    width: 80%;
+}
+.pop-up div{
+    width: 80%;
+    display: flex;
+    justify-content: space-evenly;
+}
+.ok_cancel{
+    width: 40%;
+}
+
+/* scrollbar */
+::-webkit-scrollbar{
+    width: 10px;
+    background-color: #3456;
+}
+::-webkit-scrollbar-thumb{
+    background-color: #345A;
+    border-radius: 7px;
+}
+::-webkit-scrollbar-thumb:hover{
+    background-color: #345;
+}

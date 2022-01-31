@@ -1,0 +1,240 @@
+select{
+    border-radius: 3px !important;
+}
+
+.item-list-container{
+    margin-top: 5vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-container{
+    margin: 2.5vh !important;
+    padding: 1vh 5% !important;
+    background-color: #FFF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 7px;
+    box-shadow: 0 3px 5px #0005;
+}
+.item-container:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 5px 7px #0007;
+}
+
+
+/* 
+------------------------------------------------------------
+|                        Field Page                        |
+------------------------------------------------------------
+*/
+.add-field-container div{
+    margin-bottom: 3vh !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#field_name{
+    width: 70%;
+}
+#field_type{
+    width: 20%;
+    padding-left: 20px !important;
+    background-color: #123;
+    color: #FFF;
+}
+
+
+/* 
+------------------------------------------------------------
+|                        Sample Page                        |
+------------------------------------------------------------
+*/
+.add-sample-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.sample-container{
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+#sample{
+    margin-bottom: 3vh !important;
+}
+.field-tag-container{
+    width: 25%;
+    height: 20vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #345;
+}
+.tag-title{
+    width: 100%;
+    height: 20%;
+    padding: 3px 0 !important;
+    background-color: #123;
+    color: #FFF;
+    text-align: center;
+}
+.field-tag-container div{
+    width: 100%;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+#select-field{
+    width: 90% !important;
+}
+.add-tag-btn{
+    background-color: transparent;
+    color: #FFF;
+    border: 1px solid #FFF;
+}
+.add-tag-btn:hover{
+    background-color: #FFF;
+    color: #123;
+    border-color: #345;
+}
+a.fab{
+    width: unset;
+    height: unset;
+    padding: 0 10px !important;
+    font-size: 14pt;
+    line-height: 200%;
+    border-radius: 10px;
+}
+a.fab:before{
+    content: 'Go To';
+    display: none;
+}
+a.fab:hover{
+    transform: none;
+    color: white;
+}
+a.fab:hover:before{
+    display: inline-block;
+}
+
+
+/* 
+------------------------------------------------------------
+|                        Action Page                        |
+------------------------------------------------------------
+*/
+.action-container{
+    min-height: 25vh;
+    margin: 7vh 0 !important;
+    padding: 10px 25px !important;
+    background-color: #FFF;
+    box-shadow: 0 3px 5px #0005;
+}
+.action-head{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.action-controls{
+    width: 25%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.add-control{
+    justify-content: space-evenly;
+}
+
+.action-body{
+    padding: 1% !important;
+}
+
+.action-body-item{
+    margin-top: 15px !important;
+}
+
+#say_text{
+    min-height: 10vh;
+}
+
+.listen-task-container{
+    margin-top: 15px !important;
+    padding: 0 5vw !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+#listen_tasks{
+    max-width: 50%;
+}
+
+.remember-control{
+    width: 50%;
+    column-gap: 5%;
+}
+.remember-control input{
+    width: 50%;
+}
+.remember-container{
+    margin-top: 15px !important;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: baseline;
+}
+.remember-container span{
+    width: 20%;
+    height: 5vh;
+}
+.remember-container .input{
+    width: 30%;
+    height: 5vh;
+}
+
+.redirect-radio-grp{
+    width: 50%;
+    margin-top: 25px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collect-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+#collect_name{
+    width: 50%;
+    margin-top: 20px !important;
+}
+.add-question{
+    width: 40%;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: baseline;
+}
+#new_question{
+    width: 70%;
+}
+.question-container{
+    margin-top: 20px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    column-gap: 7%;
+}
+.question-container span{
+    width: 25%;
+}
+.collect-redirect-container{
+    margin-top: 25px !important;
+}
+
+.action-save{
+    margin: 5vh 0 !important;
+}

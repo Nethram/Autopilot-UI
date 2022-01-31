@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Chatbot Maker: Bot Flow</title>
+  <link rel="shortcut icon" href="{% static 'images/logo.svg' %}" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow@0.0.48/dist/drawflow.min.css">
+  <link rel="stylesheet" href="{% static 'styles/flow.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <a href="/assistant/{{assistant.sid}}/home">Back to Dashboard</a>
+  </header>
+
+  <div class="wrapper">
+    <div class="col">
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="speech">
+        <span>Talk</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="question">
+        <span>Question</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="remember">
+        <span>Remember</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="redirect">
+        <span>Redirect</span>
+      </div>
+    </div>
+    <div class="col-right">
+      <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div>
+          <div class="btn-flow-save btn-clear-initiation" onclick="clearInitiation()">Clear Initiation Task</div>
+          <div class="btn-flow-save" onclick="publish()">Publish</div>
+        </div>
+        <div class="bar-zoom">
+          <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
+          <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
+          <i class="fas fa-search-plus" onclick="editor.zoom_in()"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay overlay-remember">
+    <div class="pop-up">
+      <h2 class="pop-up-title">Please Enter a Key & Value</h2>
+      <input type="text" class="input input-tag" id="key" placeholder="Key">
+      <input type="text" class="input input-tag" id="value" placeholder="Value">
+      <div>
+        <button class="my-btn my-btn-blue" onclick="addRemember()">Save</button>
+        <button class="my-btn my-btn-red" onclick="closeOverlay()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loader-bg">
+    <div>
+      <div></div>
+    </div>
+  </div>
+
+<script>
+
+  const checkSpclChars = string => {
+    for (char of string) {
+      charCode = char.charCodeAt();
+      if (charCode != 45 && (charCode < 48 || charCode > 57) && (charCode < 65 || charCode > 90) && charCode != 95  && (charCode < 97 || charCode > 122)) {
+        alert('Use alphanumeric characters & underscores & dashes only');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function clearInitiation() {
+    $.ajax({
+      type: "POST",
+      url: "/clear_bot_initiation",
+      data: {'assistantSid': '{{assistant.sid}}'},
+      dataType: "json"
+    }).done(response => {
+      console.log('Clear Bot Initiation', response);
+      if (response.status === 'done') {
+        $('.initiation-radio input').prop('checked', false);
+        hasInitiationTask = false;
+        showInitiationButton();
+      }
+    });
+  }
+
+  $('body').on('change', '.title-box', function() {
+    if (!$(this).parent().hasClass('question-item'))
+      return;
+    let count = 0;
+    for (i of Array(...$('.title-box'))) {
+      if (i.value == this.value)
+        count++;
+      if (count == 2) {
+        $(this).focus().val('');
+        return alert('Task Name should be unique');
+      }
+    }
+    let sid = $(this).closest('.question-item').data('sid');
+    let inNode = editor.getNodeFromId($(this).closest('.drawflow-node').attr('id').slice(5)).inputs.input_1.connections;
+    let inputBool = false;
+    if (inNode.length === 0)
+      inputBool = true;
+    else
+      inputBool = !$(`#node-${inNode[0].node}`).find('.drawflow_content_node > div').hasClass('question-item');
+    if (sid != '' && inputBool) {
+      $.ajax({
+        type: "POST",
+        url: "/task_rename_flow",
+        data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sid, 'taskName': this.value.trim()},
+        dataType: "json"
+      }).done(response => console.log('Rename Task', response));
+      $.ajax({
+        type: "POST",
+        url: "/get_action_flow",
+        data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sid},
+        dataType: "json"
+      }).done(response => {
+        collectGroupName[sid] = this.value;
+        let action = JSON.parse(response.actions);
+        action.actions[0].collect.name = this.value;
+        action.actions[0].collect.questions[0].name = this.value;
+        let newAction = JSON.stringify(action);
+        console.log(newAction);
+        updateActions(newAction, sid);
+      });
+    }
+  });
+
+  let blockNum = 0;
+  let qnBlockNum = 0;
+
+  const showInitiationButton = () => {
+    if (hasInitiationTask)
+      $('.btn-clear-initiation').css('display', 'block');
+    else
+      $('.btn-clear-initiation').css('display', 'none');
+  };
+
+  $(document).ready(function() {
+    
+    sidObject = {};
+    questionNodes = {};
+    collectGroupName = {};
+    invalidQuestionSids = [];
+    nodePositionsX = [];
+    nodeOffSetY = 0;
+
+    editor.removeNodeId = function(id, sidTrue = true) {
+      if (!$(`#node-${id.slice(5)}`).find('.drawflow_content_node > div').hasClass('question-item') && sidTrue) {
+        $.ajax({
+          type: "POST",
+          url: "/delete_task_flow",
+          data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sidObject[id.slice(5)].sid},
+          dataType: "json"
+        }).done(response => {
+          console.log('Delete Task', response);
+          if (response.status == 'done') {
+            this.removeConnectionNodeId(id);
+            var moduleName = this.getModuleFromNodeId(id.slice(5))
+            if (this.module === moduleName)
+              document.getElementById(id).remove();
+            delete this.drawflow.drawflow[moduleName].data[id.slice(5)];
+            this.dispatch('nodeRemoved', id.slice(5));
+            delete sidObject[id.slice(5)];
+          }
+          else
+            alert("All Fields and Samples associated with the Task must be deleted before deleting the Task");
+        });
+      }
+      else if (!sidTrue) {
+        this.removeConnectionNodeId(id);
+        var moduleName = this.getModuleFromNodeId(id.slice(5))
+        if (this.module === moduleName)
+          document.getElementById(id).remove();
+        delete this.drawflow.drawflow[moduleName].data[id.slice(5)];
+        this.dispatch('nodeRemoved', id.slice(5));
+      }
+      else {
+        let sid = $(`#node-${id.slice(5)}`).find('.question-item').data('sid');
+        try {
+          collectNodeGroup[sid] = collectNodeGroup[sid].filter(node => node != id.slice(5));
+        }
+        catch {
+        }
+        if (sid.length !== 0 && collectNodeGroup[sid].length === 0) {
+          $.ajax({
+          type: "POST",
+          url: "/delete_task_flow",
+          data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sid},
+          dataType: "json"
+          }).done(response => {
+            console.log('Delete Task', response);
+            if (response.status == 'done') {
+              this.removeConnectionNodeId(id);
+              var moduleName = this.getModuleFromNodeId(id.slice(5))
+              if (this.module === moduleName)
+                document.getElementById(id).remove();
+              delete this.drawflow.drawflow[moduleName].data[id.slice(5)];
+              this.dispatch('nodeRemoved', id.slice(5));
+              delete questionNodes[id.slice(5)];
+              delete collectNodeGroup[sid];
+            }
+            else
+              alert("All Fields and Samples associated with the Task must be deleted before deleting the Task");
+          });
+        }
+        else {
+          let idNum = id.slice(5);
+          this.removeConnectionNodeId(id);
+          var moduleName = this.getModuleFromNodeId(idNum)
+          if (this.module === moduleName)
+            document.getElementById(id).remove();
+          delete this.drawflow.drawflow[moduleName].data[idNum];
+          this.dispatch('nodeRemoved', idNum);
+          Object.keys(collectGroupName).forEach(sid => {
+            if (questionNodes[idNum].name == collectGroupName[sid]) {
+              $.ajax({
+                type: "POST",
+                url: "/get_action_flow",
+                data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sid},
+                dataType: "json"
+              }).done(response => {
+                let action = JSON.parse(response.actions);
+                action.actions[0].collect.questions.shift();
+                let newName = action.actions[0].collect.questions[0].name;
+                collectGroupName[sid] = newName;
+                action.actions[0].collect.name = newName;
+                let newAction = JSON.stringify(action);
+                console.log(newAction);
+                updateActions(newAction, sid);
+                $.ajax({
+                  type: "POST",
+                  url: "/task_rename_flow",
+                  data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sid, 'taskName':newName},
+                  dataType: "json"
+                }).done(response => {
+                  console.log('Rename Task', response);
+                  $(`#node-${++idNum}`).data('name', newName);
+                });
+              });
+            }
+          });
+          delete questionNodes[idNum];
+        }
+      }
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "/get_task_nodes",
+      data: {'assistantSid': '{{assistant.sid}}'},
+      dataType: "json"
+    }).then(response => {
+      connectionObject = {};
+      collectNodeGroup = {};
+      onComplete = {};
+      twilioCollectQuestion = {};
+      hasInitiationTask = Boolean("{{initiation_task}}");
+
+      showInitiationButton();
+      blockNum = Object.values(response.task_data_list.filter(task => task.name.startsWith('TaskName'))).map(task => task.name.slice(8)).sort().reverse()[0];
+      if (blockNum === undefined)
+        blockNum = 0;
+      let questionNames = [];
+      response.task_data_list.filter(task => task.type === 'question').forEach(task => task.actions[0].collect.questions.forEach(question => {
+        if (question.name.startsWith('QuestionName'))
+          questionNames.push(question.name.slice(12))
+      }));
+      qnBlockNum = questionNames.sort().reverse()[0];
+      if (qnBlockNum === undefined)
+        qnBlockNum = 0;
+      
+      for (task of response.task_data_list) {
+        
+        if (!task.actions.length)
+          continue;
+
+        let myActions = {};
+        let listenTrue;
+
+        task.actions.forEach((item, index, array) => Object.keys(item).forEach(key => {
+          switch (key) {
+            case 'listen':
+              let taskList = [];
+              if (Object.values(item)[0] === true) {
+                listenTrue = true;
+                response.task_data_list.forEach(task => taskList.push(task.name));
+                Object.keys(twilioCollectQuestion).forEach(question => taskList.push(twilioCollectQuestion[question]));
+              }
+              else {
+                if (Boolean(array.filter(action => {
+                  let actionType = Object.keys(action)[0];
+                  return actionType !== 'say' && actionType !== 'play';
+                }).length - 1))
+                  break;
+                taskList = array[index][key].tasks;
+              }
+              connectionObject[task.sid] = taskList;
+              break;
+            case 'redirect':
+              if (typeof(array[index][key]) == 'string')
+                connectionObject[task.sid] = Array(array[index][key].slice(7));
+              myActions['redirectURL'] = item[key].uri;
+              myActions['redirectMethod'] = item[key].method;
+              break;
+            case 'say':
+              myActions['sayAction'] = item[key];
+              break;
+            case 'play':
+              myActions['playURL'] = item[key].url;
+              myActions['playLoop'] = item[key].loop;
+              break;
+            case 'remember':
+              let value = '';
+              Object.keys(item[key]).forEach(k => value += `${k}:${item[key][k]}\n`);
+              myActions['rememberAction'] = value;
+              break;
+          }
+        }));
+          
+        let arg1 = '';
+        let arg2 = '';
+        let arg3 = '';
+        let taskType;
+
+        let firstAction = Object.keys(task.actions[0])[0];
+        let actionCount = -1;
+        let sayCount = 0;
+        task.actions.forEach(action => {
+          let thisAction = Object.keys(action)[0];
+          if (['say', 'collect', 'remember', 'redirect'].includes(thisAction))
+            actionCount++;
+          if (thisAction === 'say')
+            sayCount++;
+        });
+        let validity = actionCount < 1 ? true: false;
+        let invalid;
+        if (!validity)
+          invalid = "Cannot have different types of actions in one task. Some actions may have been lost";
+
+        if (firstAction === 'remember') {
+          let hasRedirect = task.actions.filter(action => Object.keys(action)[0] === 'redirect');
+          let redirectValue;
+          if (Boolean(hasRedirect.length))
+            redirectValue = hasRedirect[0].redirect;
+          if (task.actions.length === 2 && Boolean(hasRedirect.length)) {
+            try {
+              validity = redirectValue.startsWith('task://');
+            }
+            catch{
+              invalid = "Remember tasks can be redirected only to a task";
+            }
+          }
+          if (Boolean(task.actions.filter(action => Object.keys(action)[0] === 'listen').length)) {
+            validity = false;
+            invalid = "Remember tasks can't have listen action";
+            delete connectionObject[task.sid];
+            if (Boolean(hasRedirect.length) && typeof(redirectValue) === 'string')
+              connectionObject[task.sid] = [redirectValue.slice(7)];
+          }
+        }
+          
+        if (task.actions.length === 1 && firstAction === 'redirect') {
+          validity = typeof(task.actions[0].redirect) === 'object';
+          if (!validity)
+            invalid = "Redirect can only be used to direct to a URL";
+        }
+        
+        if (sayCount > 1) {
+          let joinedSay = '';
+          task.actions.filter(action => Object.keys(action)[0] === 'say').forEach(say => joinedSay += Object.values(say)[0] + ' ');
+          myActions.sayAction = joinedSay.trimRight();
+          invalid = "Multiple Say actions are combined to one";
+        }
+
+        switch (firstAction) {
+          case 'remember':
+            taskType = 'remember';
+            break;
+          case 'redirect':
+            taskType = 'redirect';
+            break;
+          case 'collect':
+            taskType = 'question';
+            break;
+          default:
+            taskType = 'speech';
+            if (firstAction === 'listen') {
+              if (Object.values(task.actions).filter(action => !['say', 'play', 'listen'].includes(Object.keys(action)[0])).length) {
+                validity = false;
+                invalid = "All actions after Listen except Say will be lost";
+              }
+            }
+        }
+        switch (taskType) {
+          case 'speech':
+            arg1 = myActions.sayAction;
+            arg2 = myActions.playURL;
+            arg3 = myActions.playLoop;
+            break;
+          case 'remember':
+            arg1 = myActions.rememberAction;
+            break;
+          case 'redirect':
+            arg1 = myActions.redirectURL;
+            try {
+              if (myActions.redirectMethod.toUpperCase() == 'POST')
+                arg2 = 'checked';
+              else if (myActions.redirectMethod.toUpperCase() == 'GET')
+                arg3 = 'checked';
+            }
+            catch {
+            }
+            break;
+        }
+
+        let x = task.x;
+        let y = task.y;
+        while (nodePositionsX.includes(x)) {
+          x += 300;
+          if (x > 1800) {
+            nodeOffSetY += 400;
+            nodePositionsX = [];
+            x = 0;
+          }
+        }
+        if (y == 0)
+          y += nodeOffSetY;
+        nodePositionsX.push(x);
+
+        if (taskType === 'redirect')
+          editor.addNode(taskType, 1,  0, x, y, taskType, {}, nodeCreator(taskType, task.name, task.sid, arg1, arg2, arg3, validity, invalid));
+        else if (taskType === 'question') {
+          collectGroupName[task.sid] = task.name;
+          let questionBlocks = [];
+          twilioCollectQuestion[task.name] = task.actions[0].collect.questions[0].name;
+          task.actions[0].collect.questions.forEach(question => {
+            editor.addNode(taskType, 1,  1, x, y, taskType, {}, nodeCreator(taskType, question.name, task.sid, question.question, question.type, validity, invalid));
+            x += 250;
+            questionBlocks.push(question.name);
+          });
+          collectNodeGroup[task.sid] = [];
+          questionBlocks.forEach((item, index, array) => {
+            collectNodeGroup[task.sid].push($(`.question-item[data-sid=${task.sid}]`).find(`.title-box[value=${item}]`).closest('.drawflow-node').attr('id').slice(5));
+            array[index] = $(`.question-item[data-sid=${task.sid}]`).find(`.title-box[value=${item}]`).closest('.drawflow-node').attr('id').slice(5)
+          });
+          questionBlocks.forEach(item => {
+            if (item != questionBlocks.slice(-1))
+              editor.addConnection(item, item - -1, 'output_1', 'input_1');
+            else {
+              try {
+                onComplete[item] = task.actions[0].collect.on_complete.redirect.slice(7);
+                if (task.actions.length > 1) {
+                  invalidQuestionSids.push(Object.keys(collectGroupName).find(i => collectGroupName[i] === task.name));
+                  $(`.question-item[data-sid=${task.sid}]`).addClass('not-allowed');
+                }
+              }
+              catch {
+                invalidQuestionSids.push(Object.keys(collectGroupName).find(i => collectGroupName[i] === task.name));
+              }
+            }
+          });
+        }
+        else
+          editor.addNode(taskType, 1,  1, x, y, taskType, {}, nodeCreator(taskType, task.name, task.sid, arg1, arg2, arg3, validity, invalid, listenTrue));
+      }
+
+      try {
+        Object.keys(onComplete).forEach(redirect => editor.addConnection(redirect, $('.drawflow_content_node').find(`.title-box[value=${onComplete[redirect]}`).closest('.drawflow-node').attr('id').slice(5), 'output_1', 'input_1'));
+      }
+      catch {
+      }
+
+      Object.keys(sidObject).forEach(element => {
+        let nodeSid = sidObject[element].sid;
+        let nodeOutId = $(`[data-sid=${nodeSid}]`).closest('.drawflow-node').attr('id').slice(5);
+        try {
+          connectionObject[nodeSid].forEach(item => {
+            try {
+              let nodeInId = $(`.title-box[value=${item}]`).closest('.drawflow-node').attr('id').slice(5);
+              editor.addConnection(nodeOutId, nodeInId, 'output_1', 'input_1');
+            }
+            catch {
+            }
+          });
+        }
+        catch {
+        }
+      });
+
+      $(Object.values($('.title-box')).slice(0, -2).filter(i => $(i).val() == '{{initiation_task}}')).next().find('.initiation-radio input').attr('checked', true);
+      invalidQuestionSids.forEach(sid => $(`.question-item[data-sid=${sid}]`).addClass('invalid'));
+      $('.loader-bg').css('transform', 'scale(0)');
+    });
+  });
+
+  var id = document.getElementById("drawflow");
+  const editor = new Drawflow(id);
+  editor.reroute = true;
+  editor.start();
+  editor.zoom_min = 0.3;
+
+  function getQuestions(node) {
+    let questions = [];
+    if (questionConnections[node].outType != 'question-item')
+      return [questionConnections[node].outNode];
+    questions.push(questionConnections[node].outNode, ...getQuestions(questionConnections[node].outNode));
+    return [...questions];
+  }
+
+  function publish() {
+    if (Object.values($('.drawflow_content_node > div')).filter(block => $(block).data('valid') === false).length > 0) {
+      if (!confirm('Some tasks in this flow are considered invalid & will be changed when published. Do you want to continue?'))
+        return alert("Flow is not Published & No changes were made");
+    }
+    $('.loader-bg').css('transform', 'scale(1)');
+
+    let tasks = {};
+    for (node of $('.drawflow').find('.drawflow_content_node > div')) {
+
+      let mainNode = $(node).closest('.drawflow-node');
+      let id = $(mainNode).attr('id').slice(5);
+
+      task = {};
+      task['name'] = $(node).find('.title-box').val();
+      task['sid'] = $(mainNode).data('sid');
+      task['type'] = $(node).attr('class');
+      task['outputs'] = [];
+
+      if (task['type'] === 'question-item')
+        continue;
+
+      try {
+        editor.getNodeFromId(id).outputs.output_1.connections.forEach(op => task['outputs'].push(op.node));
+      }
+      catch {
+      }
+
+      tasks[id] = task;
+      switch (task['type']) {
+        case 'speech-item':
+          let say = $(mainNode).find('.say-text').val();
+          let url = $(mainNode).find('.play-url').val();
+          let loop = Number($(mainNode).find('.box input:last').val());
+          if ((url.length == 0 || loop <= 0) && say.length === 0)
+            action = {"actions":[{"say": ""}]};
+          else if (say.length === 0)
+            action = {"actions":[{"play": {"url": url, "loop": loop}}]};
+          else if (url.length == 0 || loop <= 0)
+            action = {"actions":[{"say": say}]};
+          else
+            action = {"actions":[{"say": say}, {"play": {"url": url, "loop": loop}}]};
+
+          if (mainNode.find('.listen-true input')[0].checked)
+              action.actions.push({"listen": true});
+          else {
+            if (task.outputs.length !== 0)
+              action.actions.push({"listen": {'tasks': task.outputs}});
+          }
+          break;
+
+        case 'remember-item':
+          action = {"actions":[{"remember": {}}]};
+          for (line of $(node).find('textarea').val().split('\n')) {
+            let pair = line.split(':');
+            if (pair[1] !== undefined)
+              action.actions[0].remember[pair[0].trim()] = pair[1];
+          }
+          if (task.outputs.length !== 0)
+            action.actions.push({"redirect": task.outputs});
+          break;
+
+        case 'redirect-item':
+          let uri = $(mainNode).find('.box input:first').val();
+          let method = $(mainNode).find('input[type=radio]:checked').val();
+          action = {"actions": [{"redirect": {"uri": uri, "method": method}}]};
+          break;
+      }
+      
+      task['action'] = action;
+    }
+
+    questionConnections = {};
+    Object.keys(questionNodes).forEach(nodeId => {
+      let nodeData = editor.getNodeFromId(nodeId);
+      questionConnections[nodeId] = {};
+      let inType;
+      try {
+        inType = $(`#node-${nodeData.inputs.input_1.connections[0].node}`).find('.drawflow_content_node > div').attr('class');
+      }
+      catch {
+      }
+      questionConnections[nodeId]['inType'] = inType;
+      try{
+        questionConnections[nodeId]['outNode'] = nodeData.outputs.output_1.connections[0].node;
+        questionConnections[nodeId]['outType'] = $(`#node-${questionConnections[nodeId]['outNode']}`).find('.drawflow_content_node > div').attr('class');
+      }
+      catch {
+      }
+    });
+
+    let collectObject = {};
+    let collectIndex = 0;
+    let invalidQuestion = false;
+
+    for (question of Object.keys(questionConnections)) {
+      if (questionConnections[question].outType == undefined) {
+        $('.loader-bg').css('transform', 'scale(0)');
+        return alert("Please make sure that all Question groups are completed with any other block");
+      }
+    }
+
+    Object.keys(questionConnections).forEach(inNode => {
+
+      let collectGroup = {
+        'questions': []
+      };
+      if (questionConnections[inNode].inType !== 'question-item') {
+        let collectNodes = [inNode];
+        tasks[inNode] = {
+          'type': 'question-item'
+        };
+
+        collectNodes.push(...getQuestions(inNode));
+        collectNodes.forEach(item => {
+          if (item == collectNodes.slice(-1))
+            collectGroup['on_complete'] = {'redirect': 'task://' + $(`#node-${item}`).find('.title-box').val()};
+          else {
+            let question = {
+              'name': questionNodes[item].name,
+              'question': questionNodes[item].question
+            }
+            if (questionNodes[item].type !== 'Any')
+              question['type'] = questionNodes[item].type;
+            collectGroup.questions.push(question)
+          }
+        });
+        let qns = [];
+        collectGroup.questions.forEach(qn => qns.push(qn.name));
+
+        let collectInType = questionConnections[inNode].inType;
+        if (collectInType === undefined || collectInType !== 'question-item') {
+          let collectName;
+          let collectSid = $(`#node-${inNode}`).find('.question-item').data('sid');
+          if (collectSid === '')
+            collectName = collectGroup.questions[0].name;
+          else
+            collectName = collectGroupName[collectSid];
+          collectGroup.name = collectName;
+          tasks[inNode].name = collectName;
+          collectObject[String(collectNodes)] = collectGroup;
+        }
+      }
+    });
+
+    let taskActions = [];
+    Object.keys(collectObject).forEach(item => {
+      $.ajax({
+        type: "POST",
+        url: "/create_task_flow",
+        data: {'assistantSid': '{{assistant.sid}}', 'nodeId': collectObject[item].name},
+        dataType: "json",
+        async: false
+      }).done(response => {
+        let action = JSON.stringify({'actions': [{'collect': collectObject[item]}]});
+        let questionBlocks = item.split(',');
+        let questionSid;
+
+        if (response.status == 'success') {
+          collectGroupName[response.task_sid] = collectObject[item].questions[0].name;
+          collectNodeGroup[response.task_sid] = [];
+          questionBlocks.forEach(node => {
+            if (node != questionBlocks.slice(-1)) {
+              $(`#node-${node}`).data('sid', response.task_sid);
+              $(`#node-${node}`).find('.question-item').data('sid', response.task_sid);
+              collectNodeGroup[response.task_sid].push(node);
+            }
+          });
+          questionSid = response.task_sid;
+        }
+        else
+          questionSid = $(`#node-${questionBlocks[0]}`).find('.question-item').data('sid');
+        
+        taskActions.push({
+          'sid': questionSid,
+          'action': action
+        });
+
+        let node = editor.getNodeFromId(questionBlocks[0]);
+        $.ajax({
+          type: "POST",
+          url: "/update_node_position",
+          data: {'taskSid': questionSid, 'taskType': 'question-item', 'posX': node.pos_x, 'posY': node.pos_y},
+          dataType: "json"
+          }).done(response => console.log('Node Position Updation', response));
+      });
+    });
+
+    for (key of Object.keys(tasks)) {
+      if (tasks[key].type === 'question-item')
+        continue;
+      
+      tasks[key].outputs.forEach((item, index, array) => array[index] = $(`#node-${item}`).find('.title-box').val());
+      
+      if (tasks[key].type == 'remember-item')
+        tasks[key].action.actions.forEach(item => {
+          let key = Object.keys(item);
+          if (key == 'redirect')
+            item[key] = `task://${item[key]}`;
+        });
+        
+      taskActions.push({
+        'sid': tasks[key].sid, 
+        'action': JSON.stringify(tasks[key].action)
+      });
+    }
+
+    console.log(taskActions);
+
+    $.ajax({
+      type: "POST",
+      url: "/bot_initiation",
+      data: {'initiation_task': $('input[name=initiation]:checked').closest('.drawflow_content_node').find('.title-box').val(), 'assistantSid': '{{assistant.sid}}'},
+      dataType: "json"
+    }).done(response => console.log('Bot Initiation Updation', response));
+
+    $.ajax({
+      type: "POST",
+      url: "/publish_flow",
+      data: {'taskActions': JSON.stringify(taskActions), 'assistantSid': '{{assistant.sid}}'},
+      dataType: "json",
+    }).done(response => {
+      console.log('Publish Flow', response);
+      $('.loader-bg').css('transform', 'scale(0)');
+    });
+          
+  }
+
+  function updateActions(action, taskSid) {
+    $.ajax({
+    type: "POST",
+    url: "/update_action_flow",
+    data: {'action': action, 'assistantSid': '{{assistant.sid}}', 'taskSid': taskSid},
+    dataType: "json"
+    }).done(response => console.log('Task Actions Updation', response));
+  }
+
+  function sayChange(node) {
+    let mainNode = $(node).closest('.drawflow-node');
+    let say = $(mainNode).find('.say-text').val();
+    let url = $(mainNode).find('.play-url').val();
+    let loop = Number($(mainNode).find('.box input:last').val());
+    let taskSid = mainNode.data('sid');
+
+    if ((url.length == 0 || loop <= 0) && say.length === 0)
+      action = {"actions":[]};
+    else if (say.length === 0)
+      action = {"actions":[{"play": {"url": url, "loop": loop}}]};
+    else if (url.length == 0 || loop <= 0)
+      action = {"actions":[{"say": say}]};
+    else
+      action = {"actions":[{"say": say}, {"play": {"url": url, "loop": loop}}]};
+
+    $.ajax({
+      type: "POST",
+      url: "/get_action_flow",
+      data: {"assistantSid": '{{assistant.sid}}', "taskSid": taskSid},
+      dataType: "json"
+    }).done(response => {
+      let actionGet = JSON.parse(response.actions);
+      for (actions of actionGet.actions) {
+        if (Object.keys(actions) == 'listen') {
+          console.log(actions)
+          action.actions.push(actions);
+          break;
+        }
+      }
+      let newActions = JSON.stringify(action);
+      console.log(newActions)
+      updateActions(newActions, taskSid);
+    });
+  }
+
+  function rememberChange() {
+    let action = {"actions":[{"remember": {}}]};
+    for (line of $(this).val().split('\n')) {
+      let pair = line.split(':');
+      if (pair[1] !== undefined)
+        action.actions[0].remember[pair[0].trim()] = pair[1];
+    }
+    action = JSON.stringify(action)
+    console.log(action);
+    let taskSid = $(this).closest('.drawflow-node').data('sid');
+    updateActions(action, taskSid);
+  }
+
+  function redirectChange(node) {
+    let mainNode = node.closest('.drawflow-node');
+    let uri = $(mainNode).find('.box input:first').val();
+    let method = $(mainNode).find('input[type=radio]:checked').val();
+    let action = {"actions": [{"redirect": {"uri": uri, "method": method}}]};
+    action = JSON.stringify(action)
+    console.log(action);
+    let taskSid = mainNode.data('sid');
+    updateActions(action, taskSid);
+  }
+
+  function questionChange(node) {
+    let mainNode = $(node).closest('.question-item');
+    let nodeId = mainNode.closest('.drawflow-node').attr('id').slice(5);
+    let questionName = mainNode.find('input:first-child').val();
+    let question = mainNode.find('input:last-child').val();
+    let answerType = mainNode.find('select').val();
+
+    questionNodes[nodeId] = {};
+    questionNodes[nodeId]['name'] = questionName;
+    questionNodes[nodeId]['question'] = question;
+    questionNodes[nodeId]['type'] = answerType;
+  }
+
+  function addRemember() {
+    $(textArea).val($(textArea).val()+(`${$('#key').val().trim()}:${$('#value').val().trim()}\n`));
+    $(textArea).trigger('change');
+    closeOverlay();
+  }
+
+  function getNodePosition (id) {
+    let node = editor.getNodeFromId(id);
+    let type = $(`#node-${id} .drawflow_content_node > div`).attr('class').split(' ')[0];
+    let sid = $(`#node-${id}`).data('sid')
+    let x = node.pos_x
+    let y = node.pos_y
+    console.log(sid, type, x, y)
+    $.ajax({
+      type: "POST",
+      url: "/update_node_position",
+      data: {'taskSid': sid, 'taskType': type, 'posX': x, 'posY': y},
+      dataType: "json"
+      }).done(response => console.log('Node Position Updation', response));
+  }
+
+  const taskSamples = taskSid => window.open(`/assistant/{{assistant.sid}}/task/${taskSid}/samples/`);
+
+  function createTaskNode(id) {
+    let mainNode = $(`#node-${id}`);
+    $.ajax({
+    type: "POST",
+    url: "/create_task_flow",
+    data: {'nodeId': mainNode.find('.title-box').val(), 'assistantSid': '{{assistant.sid}}'},
+    dataType: "json",
+    async: false
+    }).done(response => {
+      if (response.status == 'success') {
+        taskSid = response.task_sid;
+        taskName = response.task_name
+      }
+      else {
+        taskSid = mainNode.find('.drawflow_content_node > div').data('sid');
+        taskName = mainNode.find('.drawflow_content_node > div .title-box').val();
+      }
+      sidObject[id] = {};
+      sidObject[id]['sid'] = taskSid;
+      sidObject[id]['name'] = taskName;
+      mainNode.data('name', taskName).data('sid', taskSid);
+      console.log(`${taskName} task node added\n`);
+      getNodePosition(id);
+    });
+  }
+
+  editor.on('nodeCreated', function(id) {
+    let taskName = $(`#node-${id} .title-box`).val();
+    if ($(`.drawflow_content_node .title-box[value=${taskName}]`).length == 2) {
+      editor.removeNodeId(`node-${id}`, false)
+      alert(`Node with this name (${taskName}) exist`);
+      return;
+    }
+    console.log("Node created " + id);
+
+    let mainNode = $(`#node-${id}`);
+    if (!mainNode.find('.drawflow_content_node > div').data('valid'))
+      mainNode.find('.drawflow_content_node > div').addClass('invalid');
+      
+    mainNode.find('.initiation-radio label').attr('for', id + 'initiation');
+    mainNode.find('.initiation-radio input').attr('id', id + 'initiation');
+    mainNode.find('.listen-true input').attr('id', id + 'listen_true');
+    mainNode.find('.listen-true label').attr('for', id + 'listen_true');
+    mainNode.find('radio-grp input:radio').attr('name', id);
+    mainNode.find('textarea').attr('name', id)
+
+    mainNode.find('.initiation-radio input').on('change', () => {
+      hasInitiationTask = true;
+      showInitiationButton();
+    });
+
+    mainNode.find('.listen-true input').on('change', function() {
+      let tasksIds = [];
+      let tasks = Object.values($('.title-box')).slice(0, -2).filter(task => !$(task).closest('.drawflow_content_node > div').hasClass('question-item'));
+      Object.values(collectGroupName).forEach(name => tasks.push($(`[value=${name}]`)[0]));
+      Object.keys(twilioCollectQuestion).forEach(question => tasks.push($(`[value=${twilioCollectQuestion[question]}]`)[0]));
+      tasks.filter(task => task !== undefined).forEach(task => tasksIds.push($(task).closest('.drawflow-node').attr('id').slice(5)));
+      if (this.checked)
+        tasksIds.forEach(inId => editor.addConnection(id, inId, 'output_1', 'input_1'));
+      else
+        tasksIds.forEach(inId => editor.removeSingleConnection(id, inId, 'output_1', 'input_1'));
+    });
+
+    $('.add-remember').on('click', function() {
+      textArea = $(this).closest('.remember-item').find('textarea');
+      $('.overlay-remember').css('transform', 'scale(1)');
+    });
+
+    let thisNode = mainNode.find('.drawflow_content_node > div');
+
+    ['input', 'select', 'label', 'textarea'].forEach(element => $('.drawflow_content_node').find(element).on('dblclick', e => e.stopPropagation()));
+
+    $(thisNode).find('.box').on('dblclick', () => {
+      let taskSid = mainNode.data('sid');
+      if (taskSid === undefined)
+        taskSid = thisNode.data('sid');
+      if (taskSid === '')
+        alert("Please publish before trying to train the Question block");
+      else
+        taskSamples(taskSid);
+    });
+
+    if ($(thisNode).hasClass('speech-item')) {
+      createTaskNode(id);
+      $(thisNode).find('input:not(.option)').on('change', function() {
+        sayChange($(this));
+      });
+    }
+
+    else if ($(thisNode).hasClass('remember-item')) {
+      createTaskNode(id);
+      $(thisNode).find('textarea').on('change', rememberChange);
+    }
+
+    else if ($(thisNode).hasClass('redirect-item')) {
+      createTaskNode(id);
+      $(thisNode).find('input').on('change', function() {
+        redirectChange($(this));
+      });
+    }
+
+    else {
+      $(thisNode).find('input').on('change', function() {
+        questionChange($(this))
+      });
+      $(thisNode).find('select').on('change', function() {
+        questionChange($(this))
+      });
+      questionChange($(thisNode).find('input'));
+    }
+
+    mainNode.find('.title-box').on('change', function() {
+      let taskName = mainNode.find('.title-box');
+      if (taskName.val().trim() == '') {
+        taskName.val('').focus();
+        return alert("Task Name can't be empty")
+      }
+      if (checkSpclChars(taskName.val()) && !mainNode.find('.drawflow_content_node > div').hasClass('question-item')) {
+        $.ajax({
+          type: "POST",
+          url: "/task_rename_flow",
+          data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sidObject[id].sid, 'taskName': taskName.val().trim()},
+          dataType: "json"
+        }).done(response => {
+          console.log('Rename Task', response);
+          mainNode.data('name', taskName.val());
+          sidObject[id].name = taskName.val();
+        });
+      }
+      else
+        taskName.focus();
+    });
+
+    if (!$(thisNode).hasClass('question-item'))
+      Object.values($('.listen-true input')).slice(0, -1).filter(task => task.checked).forEach(task => editor.addConnection($(task).closest('.drawflow-node').attr('id').slice(5), id, 'output_1', 'input_1'));
+  });
+
+  editor.on('nodeRemoved', function(id) {
+    console.log("Node removed " + id);
+  });
+
+  editor.on('nodeSelected', function(id) {
+    console.log("Node selected " + id);
+  });
+
+  editor.on('connectionCreated', function(connection) {
+    console.log('Connection created');
+    let nodeOut = connection.output_id;
+    let nodeIn = connection.input_id;
+    let sidIn = $(`#node-${nodeIn} .question-item`).data('sid');
+    let outputNode = $(`#node-${nodeOut} .drawflow_content_node > div`).attr('class');
+    let inputNode = $(`#node-${nodeIn} .drawflow_content_node > div`).attr('class');
+    if ((outputNode == 'question-item' || outputNode == 'remember-item') && editor.getNodeFromId(nodeOut).outputs.output_1.connections.length != 1) {
+      alert('This block can have only 1 output connection');
+      editor.removeSingleConnection(nodeOut, nodeIn, 'output_1', 'input_1');
+    }
+    else if (inputNode == 'question-item') {
+      let outNodes = [];
+      for (inNodes of editor.getNodeFromId(nodeIn).inputs.input_1.connections)
+        outNodes.push(editor.getNodeFromId(inNodes.node).name)
+      if (outNodes.length != 1 && outNodes.includes("question")) {
+        alert('Question Block can have only 1 question input connection or only speech inputs');
+        editor.removeSingleConnection(nodeOut, nodeIn, 'output_1', 'input_1');
+      }
+    }
+    if (inputNode === 'question-item' && outputNode === 'question-item' && $(`#node-${nodeOut} .question-item`).data('sid') !== sidIn) {
+      let newName = $(`#node-${nodeOut} .title-box`).val()
+      $.ajax({
+        type: "POST",
+        url: "/task_rename_flow",
+        data: {'assistantSid': '{{assistant.sid}}', 'taskSid': sidIn, 'taskName': newName.trim()},
+        dataType: "json"
+      }).done(response => {
+        console.log('Rename Task', response);
+        if (response.status === 'done') {
+          $.ajax({
+            type: "POST",
+            url: "/get_action_flow",
+            data: {"assistantSid": '{{assistant.sid}}', "taskSid": sidIn},
+            dataType: "json"
+          }).done(response => {
+            action = JSON.parse(response.actions);
+            action.actions[0].collect.name = newName;
+            if (questionNodes[nodeOut].type === "Any")
+              delete questionNodes[nodeOut].type;
+            action.actions[0].collect.questions.unshift(questionNodes[nodeOut]);
+            let newAction = JSON.stringify(action);
+            console.log(newAction);
+            updateActions(newAction, sidIn);
+            collectGroupName[sidIn] = newName;
+            collectNodeGroup[sidIn].unshift(nodeOut);
+            $(`#node-${nodeOut} .question-item`).data('sid', sidIn);
+          });
+        }
+      });
+    }
+  });
+
+  // editor.on('connectionRemoved', function(connection) {
+  //   console.log('Connection removed');
+  // });
+
+  editor.on('nodeMoved', function(id) {
+    // console.log("Node moved " + id);
+    if (!$(`#node-${id}`).find('.drawflow_content_node > div').hasClass('question-item'))
+      getNodePosition(id);
+  });
+
+  var elements = document.getElementsByClassName('drag-drawflow');
+  for (var i = 0; i < elements.length; i++) {
+    elements[i].addEventListener('touchend', drop, false);
+    elements[i].addEventListener('touchmove', positionMobile, false);
+    elements[i].addEventListener('touchstart', drag, false );
+  }
+
+  var mobile_item_selec = '';
+  var mobile_last_move = null;
+  function positionMobile(ev) {
+    mobile_last_move = ev;
+  }
+
+  function allowDrop(ev) {
+    ev.preventDefault();
+  }
+
+  function drag(ev) {
+    if (ev.type === "touchstart")
+      mobile_item_selec = ev.target.closest(".drag-drawflow").getAttribute('data-node');
+    else
+    ev.dataTransfer.setData("node", ev.target.getAttribute('data-node'));
+  }
+
+  function drop(ev) {
+    if (ev.type === "touchend") {
+      var parentdrawflow = document.elementFromPoint( mobile_last_move.touches[0].clientX, mobile_last_move.touches[0].clientY).closest("#drawflow");
+      if (parentdrawflow != null)
+        addNodeToDrawFlow(mobile_item_selec, mobile_last_move.touches[0].clientX, mobile_last_move.touches[0].clientY);
+      mobile_item_selec = '';
+      }
+    else {
+      ev.preventDefault();
+      var data = ev.dataTransfer.getData("node");
+      addNodeToDrawFlow(data, ev.clientX, ev.clientY);
+    }
+  }
+
+  function nodeCreator(type, name, sid='', arg1='', arg2='', arg3='', valid=true, invalid='', listenTrue=false) {
+    switch (type) {
+      case 'speech':
+        return `
+          <div class="speech-item" data-sid="${sid}" data-valid="${valid}" data-invalid="${invalid}">
+            <input class="title-box" type="text" value="${name}" placeholder="TaskName">
+            <div class="box">
+              <div class="initiation-radio">
+                <label>Set as Bot Initiation</label>
+                <input type="radio" name="initiation" class="option">
+              </div>
+              <div class="listen-true">
+                <label>Listen to all Tasks</label>
+                <input type="checkbox" class="option" ${listenTrue? "checked": ''}>
+              </div>
+              <div>
+                <label>Say:</label>
+                <input type="text" placeholder="Text to say to user" value="${arg1}" class="say-text">
+              </div>
+              <div>
+                <label>Play</label>
+                <input type="url" placeholder="URL of audio" value="${arg2}" class="play-url">
+                <input type="number" placeholder="Loop Count" value="${arg3}">
+              </div>
+            </div>
+          </div>`;
+
+      case 'remember':
+        return `
+          <div class="remember-item" data-sid="${sid}" data-valid="${valid}" data-invalid="${invalid}">
+            <input class="title-box" type="text" value="${name}" placeholder="TaskName">
+            <div class="box">
+              <span style="display: flex; justify-content: space-between;">Remember
+                <button class="my-btn my-btn-blue add-remember">+</button>
+              </span>
+              <textarea>${arg1}</textarea>
+            </div>
+          </div>`;
+
+      case 'redirect':
+        return `
+          <div class="redirect-item" data-sid="${sid}" data-valid="${valid}" data-invalid="${invalid}">
+            <input class="title-box" type="text" value="${name}" placeholder="TaskName">
+            <div class="box">
+              <span>Redirect</span>
+              <input type="url" placeholder="Enter URL to redirect to" value="${arg1}">
+              <div class="radio-grp">
+                <span>Method</span>
+                <div class=radio-item>
+                  <label>POST</label>
+                  <input type="radio" value="POST" ${arg2}>
+                </div>
+                <div class="radio-item">
+                  <label>GET</label>
+                  <input type="radio" value="GET" ${arg3}>
+                </div>
+              </div>
+            </div>
+          </div>`;
+
+      case 'question':
+        return `
+          <div class="question-item" data-sid="${sid}" data-valid="${valid}" data-invalid="${invalid}">
+            <input class="title-box" type="text" value="${name}" placeholder="QuestionName">
+            <div class="box">
+              <div>
+                <label>Question</label>
+                <input type="text" placeholder="Enter your question" value="${arg1}">
+              </div>
+              <div>
+                <label>Type</label>
+                <select class="field_types">
+                  {% for type in field_types %}
+                    <option value={{type}} ${(arg2 == `{{type}}`) ? `selected` : ''}>{{type}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>`;
+    }
+  }
+
+  function addNodeToDrawFlow(name, pos_x, pos_y) {
+    if (editor.editor_mode === 'fixed')
+      return false;
+    pos_x = pos_x * ( editor.precanvas.clientWidth / (editor.precanvas.clientWidth * editor.zoom)) - (editor.precanvas.getBoundingClientRect().x * ( editor.precanvas.clientWidth / (editor.precanvas.clientWidth * editor.zoom)));
+    pos_y = pos_y * ( editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom)) - (editor.precanvas.getBoundingClientRect().y * ( editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom)));
+
+    switch (name) {
+      case 'speech':
+        editor.addNode('speech', 1,  1, pos_x, pos_y, 'Speech', {}, nodeCreator('speech', 'TaskName' + ++blockNum));
+        break;
+
+      case 'question':
+        editor.addNode('question', 1,  1, pos_x, pos_y, 'Collect', {}, nodeCreator('question', 'QuestionName' + ++qnBlockNum));
+        break;
+
+      case 'remember':
+        editor.addNode('remember', 1,  1, pos_x, pos_y, 'Remember', {}, nodeCreator('remember', 'TaskName' + ++blockNum));
+        break;
+
+      case 'redirect':
+        editor.addNode('redirect', 1, 0, pos_x, pos_y, 'Redirect', {}, nodeCreator('redirect', 'TaskName' + ++blockNum));
+        break;    
+    }
+  }
+
+  var transform = '';
+  function showpopup(e) {
+    e.target.closest(".drawflow-node").style.zIndex = "9999";
+    e.target.children[0].style.display = "block";
+    transform = editor.precanvas.style.transform;
+    editor.precanvas.style.transform = '';
+    editor.precanvas.style.left = editor.canvas_x +'px';
+    editor.precanvas.style.top = editor.canvas_y +'px';
+    console.log(transform);
+    editor.editor_mode = "fixed";
+  }
+
+  function closemodal(e) {
+    e.target.closest(".drawflow-node").style.zIndex = "2";
+    e.target.parentElement.parentElement.style.display  ="none";
+    editor.precanvas.style.transform = transform;
+    editor.precanvas.style.left = '0px';
+    editor.precanvas.style.top = '0px';
+    editor.editor_mode = "edit";
+  }
+
+  function changeModule(event) {
+    var all = document.querySelectorAll(".menu ul li");
+    for (var i = 0; i < all.length; i++)
+      all[i].classList.remove('selected');
+    event.target.classList.add('selected');
+  }
+
+  function changeMode(option) {
+    if (option == 'lock') {
+      lock.style.display = 'none';
+      unlock.style.display = 'block';
+    }
+    else {
+      lock.style.display = 'block';
+      unlock.style.display = 'none';
+    }
+  }
+
+  function closeOverlay() {
+    $('.overlay').find('input').val('');
+    $('.overlay').css('transform', 'scale(0)');
+  }
+
+</script>
+</body>
+</html>

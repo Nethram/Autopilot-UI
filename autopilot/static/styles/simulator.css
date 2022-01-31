@@ -1,0 +1,149 @@
+#dashboard_simulator {
+    padding-bottom: 0 !important;
+}
+
+#dashboard_simulator .tab-data-body {
+    margin-top: 2vh !important;
+    display: flex;
+    align-items: center;
+    column-gap: 30px;
+}
+
+.simulator-container {
+    height: 70vh;
+    width: 40vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 3px solid #123;
+    border-radius: 10px;
+}
+
+.message-section {
+    width: 100%;
+    height: 65vh;
+    padding: 7px !important;
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    row-gap: 12px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.message-section > div {
+    min-width: 50px;
+    max-width: 100%;
+    padding: 5px 12px !important;
+    background-color: #48B;
+    border-radius: 10px 10px 10px 0;
+    text-overflow: ellipsis;
+}
+.message-section > .user-msg {
+    background-color: #4B4;
+    border-radius: 10px 10px 0 10px;
+    align-self: flex-end;
+}
+.message-section > .error-msg {
+    background-color: #A22;
+    color: #FFF;
+    border-radius: 10px;
+    text-align: center;
+    align-self: flex-center;
+}
+.message-section > .link-msg {
+    background-color: #037;
+    border-radius: 10px;
+    text-align: center;
+    align-self: flex-center;
+}
+.message-section > .link-msg a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: #BCD;
+    font-weight: bold;
+    text-align: center;
+}
+
+.simulator-container > div:last-child {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    background-color: #123;
+}
+
+.simulator-container input {
+    width: 85%;
+    height: 5vh;
+    padding: 20px 10px !important;
+    background-color: #123;
+    color: #FFF;
+    border: none;
+}
+.simulator-container input::placeholder {
+    color: #FFFA;
+}
+.message-section button {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    color: #BCD;
+}
+.user-input-section button {
+    aspect-ratio: 1;
+    height: 80%;
+    background: #ABC url("https://static.thenounproject.com/png/383448-200.png") no-repeat center;
+    background-size: 75%;
+    border-radius: 5px;
+}
+
+#side-container {
+    width: 40%;
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+#memory {
+    width: 100%;
+    height: 85%;
+    padding: 10px !important;
+    border: 1px solid #123;
+    overflow-y: scroll;
+}
+
+#memory ul {
+    display: inline-block;
+    list-style: none;
+}
+
+#memory details ul {
+    padding-left: 25px !important;
+}
+
+details > summary {
+    list-style-type: '➕ ';
+}
+
+details[open] > summary {
+    list-style-type: '➖ ';
+}
+
+
+.start-over {
+    padding: 0 5px !important;
+    color: #A00;
+    border-color: #A00;
+    border-radius: 5px;
+    border: 1px solid;
+}
+
+.margin-left {
+    padding-left: 25px !important;
+}
+.message-section::-webkit-scrollbar, #memory::-webkit-scrollbar {
+    width: 0;
+}

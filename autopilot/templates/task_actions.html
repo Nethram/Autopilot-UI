@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Maker : Edit Actions</title>
+    <link rel="shortcut icon" href="{% static 'images/logo.svg' %}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'styles/base.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/dashboard_details.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/task_actions.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{% static 'scripts/base.js' %}"></script>
+    <script src="{% static 'scripts/actions.js' %}"></script>
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-my-primary my-main-nav" id="top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+              <img src="{% static 'images/logo.svg' %}" alt="Logo" class="d-inline-block align-text-top my-main-nav-logo">
+              <span class="upper">
+                  <span class="text-my-aqua">Chatbot</span> <span>Maker</span>
+              </span>
+            </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="/home">Home</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="/logout">Logout</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <div class="dashboard-side-bar">
+        <a href="/assistant/{{assistant.sid}}/task/{{task.sid}}/" class="dashboard-btn">Task Home</a>
+      <a href="/assistant/{{assistant.sid}}/task/{{task.sid}}/fields/" class="dashboard-btn">Fields</a>
+      <a href="/assistant/{{assistant.sid}}/task/{{task.sid}}/samples/" class="dashboard-btn">Samples</a>
+      <a href="/assistant/{{assistant.sid}}/task/{{task.sid}}/actions/" class="dashboard-btn active-dashboard">Actions</a>
+    </div>
+
+    <div class="tab-data active-tab">
+      <div class="tab-data-title tab-data-title-double">
+        <h1>{{task.unique_name}}</h1>
+      </div>
+
+      <div>
+        
+        <div class="action-container" id="say_action_container">
+          <div class="action-head">
+            <h3 class="action-name">Say</h3>
+            <div class="action-controls">
+              <div class="form-check form-switch">
+                {% if 'say' in action_on %}
+                  <input class="form-check-input" type="checkbox" id="say-action-status" checked>
+                {% else %} 
+                  <input class="form-check-input" type="checkbox" id="say-action-status">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="action-body">
+            <textarea id="say_text" class="input input-tag action-body-item" placeholder="Enter text to Say">
+              {{my_action.say}}
+            </textarea>
+          </div>
+        </div>
+        
+        <div class="action-container" id="play_action_container">
+          <div class="action-head">
+            <h3 class="action-name">Play</h3>
+            <div class="action-controls">
+              <div class="form-check form-switch">
+                {% if 'play' in action_on %}
+                  <input class="form-check-input" type="checkbox" id="play-action-status" checked>
+                {% else %} 
+                  <input class="form-check-input" type="checkbox" id="play-action-status">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="action-body">
+            <input type="url" id="play_url" class="input input-tag action-body-item" placeholder="URL of audio to Play" value="{{my_action.play.url}}">
+            <input type="number" id="play_loop" class="input input-tag action-body-item" placeholder="Number of times audio has to loop" value="{{my_action.play.loop}}">
+          </div>
+        </div>
+        
+        <div class="action-container" id="listen_action_container">
+          <div class="action-head">
+            <h3 class="action-name">Listen</h3>
+            <div class="action-controls add-control">
+              <select id="listen_tasks">
+                {% for task in tasks %}
+                <option value="{{task.unique_name}}">{{task.unique_name}}</option>
+                {% endfor %}
+              </select>
+              <button class="sqr-btn grey-sqr-btn" onclick="listenTask()">&plus;</button>
+              <div class="form-check form-switch">
+                {% if 'listen' in action_on %}
+                  <input class="form-check-input" type="checkbox" id="listen-action-status" checked>
+                {% else %} 
+                  <input class="form-check-input" type="checkbox" id="listen-action-status">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="action-body" id="listen_task_list">
+            {% for task in my_action.listen.tasks %}
+            <div class="listen-task-container" id="{{task}}">
+              <h4 class="listen-task">{{task}}</h4>
+              <button class="sqr-btn my-btn my-btn-red" onclick="removeTask('{{task}}')">&minus;</button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <div class="action-container" id="remember_action_container">
+          <div class="action-head">
+            <h3 class="action-name">Remember</h3>
+            <div class="action-controls remember-control">
+              <input type="text" id="remember_name" class="input" placeholder="Enter name to remember">
+              <button class="sqr-btn grey-sqr-btn" onclick="rememberValue()">&plus;</button>
+              <div class="form-check form-switch">
+                {% if 'remember' in action_on %}
+                  <input class="form-check-input" type="checkbox" id="remember-action-status" checked>
+                {% else %} 
+                  <input class="form-check-input" type="checkbox" id="remember-action-status">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="action-body" id="remember_list">
+            {% for key, value in my_action.remember.items %}
+              <div id="{{key}}" class="remember-container">
+                <span id="{{key}}_key">{{key}}</span>
+                <input type="text" id="{{key}}_value" value="{{value}}" class="input input-tag" placeholder="Enter Value to remember">
+                <button class="sqr-btn my-btn my-btn-red" onclick="removeRemember('{{key}}')">&minus;</button>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <div class="action-container" id="redirect_action_container">
+          <div class="action-head">
+            <h3 class="action-name">Redirect</h3>
+            <div class="action-controls">
+              <div class="form-check form-switch">
+                {% if 'redirect' in action_on %}
+                  <input class="form-check-input" type="checkbox" id="redirect-action-status" checked>
+                {% else %} 
+                  <input class="form-check-input" type="checkbox" id="redirect-action-status">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="action-body">
+            <input type="text" id="redirect_url" class="input input-tag action-body-item" placeholder="URL to redirect to" value="{{my_action.redirect.uri}}">
+            <div class="redirect-radio-grp" id="{{my_action.redirect.method}}">
+              Select Method
+              <div class="radio-option">
+                <input type="radio" name="redirect_method" id="redirect_POST" value="POST">
+                <label for="redirect_POST">POST</label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" name="redirect_method" id="redirect_GET" value="GET">
+                <label for="redirect_GET">GET</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="action-container" id="collect_action_container">
+          <div class="action-head">
+            <h3 class="action-name">Collect</h3>
+            <div class="action-controls">
+              <div class="form-check form-switch">
+                {% if 'collect' in action_on %}
+                  <input class="form-check-input" type="checkbox" id="collect-action-status" checked>
+                {% else %} 
+                  <input class="form-check-input" type="checkbox" id="collect-action-status">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="action-body">
+            <div class="collect-container">
+              <input type="text" class="input input-tag" id="collect_name" placeholder="Enter name of this collector" value="{{my_action.collect.name}}">
+              <div class="add-question">
+                <input type="text" class="input input-tag" id="new_question" placeholder="Enter name of new question">
+                <button class="sqr-btn grey-sqr-btn" onclick="addQuestion()">&plus;</button>
+              </div>
+            </div>
+            <div class="questions-list-container">
+              {% for quest in my_action.collect.questions %}
+              <div class="question-container" id="{{quest.name}}">
+                <span id="{{quest.name}}_name">{{quest.name}}</span>
+                <input type="text" class="input input-tag" id="{{quest.name}}_question" placeholder="Enter your question" value="{{quest.question}}">
+                <div>
+                  Select type of Answer
+                  <select id="{{quest.name}}_type">
+                    {% for type in field_types %}
+                      {% if type == quest.type %}
+                      <option value="{{type}}" selected>{{type}}</option>
+                      {% else %}
+                      <option value="{{type}}">{{type}}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+                <button class="sqr-btn my-btn my-btn-red" onclick="removeQuestion('{{quest.name}}')">&minus;</button>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="collect-redirect-container">
+              On Complete Redirect to: 
+              <select id="collect_redirect_task">
+                {% for task in tasks %}
+                  {% if task.unique_name == collect_task %}
+                  <option value="{{task.unique_name}}" selected>{{task.unique_name}}</option>
+                  {% else %}
+                  <option value="{{task.unique_name}}">{{task.unique_name}}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="my-btn my-btn-blue action-save" onclick="saveAction()">Save</button>    
+    </div>
+
+</body>
+<script>
+
+  $(document).ready(function () {
+    fieldTypes = [];
+  `{% for type in field_types %}`
+    fieldTypes.push(`{{type}}`);
+  `{% endfor %}`
+  });
+
+  function saveAction() {
+    let actionsObject = createAction();
+    if (actionsObject !== undefined) {
+      let actionsJSON = JSON.stringify(actionsObject)
+      form = document.createElement('form');
+      form.action = '/update_task_actions';
+      form.method = 'POST';
+      let actions = document.createElement('input');
+      actions.name = 'actionsJSON';
+      actions.value = actionsJSON;
+      form.append(actions);
+      let assistant_sid = document.createElement('input');
+      assistant_sid.name = 'assistant_sid';
+      assistant_sid.value = "{{assistant.sid}}";
+      form.append(assistant_sid);
+      let task_sid = document.createElement('input');
+      task_sid.name = 'task_sid';
+      task_sid.value = "{{task.sid}}";
+      form.append(task_sid);
+      document.body.append(form)
+      form.submit()
+    }
+  }
+
+
+</script>
+</html>

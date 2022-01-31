@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Maker : Task</title>
+    <link rel="shortcut icon" href="{% static 'images/logo.svg' %}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'styles/base.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/dashboard_details.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-my-primary my-main-nav" id="top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+              <img src="{% static 'images/logo.svg' %}" alt="Logo" class="d-inline-block align-text-top my-main-nav-logo">
+              <span class="upper">
+                  <span class="text-my-aqua">Chatbot</span> <span>Maker</span>
+              </span>
+            </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="/home">Home</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="/logout">Logout</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      
+      <div class="dashboard-side-bar">
+          <a href="/assistant/{{assistant.sid}}/home" class="dashboard-btn">{{assistant.unique_name}}</a>
+          <a href="/assistant/{{assistant.sid}}/tasks" class="dashboard-btn active-dashboard">Tasks</a>
+          <a href="/assistant/{{assistant.sid}}/fields" class="dashboard-btn">Field Types</a>
+          <a href="/assistant/{{assistant.sid}}/flow/" class="dashboard-btn">Flow</button>
+          <a href="/assistant/{{assistant.sid}}/simulator" class="dashboard-btn">Simulator</a>
+          <a href="/assistant/{{assistant.sid}}/settings" class="dashboard-btn">Settings</a>
+      </div>
+
+      <div class="tab-data active-tab">
+          <div class="tab-data-title tab-data-title-double">
+              <h1>{{task.unique_name}}</h1>
+              <button class="my-btn my-btn-red" onclick="deleteTask()">Delete</button>
+          </div>
+
+        <div class="tab-data-body tab-data-body-half">
+              <div>
+                <div class="detail">
+                    <h4>Date Created</h4>
+                    {{task.date_created}}
+                </div>
+                <div class="detail">
+                    <h4>Last Updated</h4>
+                    {{task.date_updated}}
+                </div>
+                <div class="detail">
+                    <h4>Samples</h4>
+                    {{task_stats.samples_count}}
+                </div>
+                <div class="detail">
+                    <h4>Fields</h4>
+                    {{task_stats.fields_count}}
+                </div>
+              </div>
+
+              <div class="lg-btn-container">
+                <div class="btn-lg btn-lg-green" onclick="getFields()">
+                  <span>Manage</span>
+                  <h2>Fields</h2>
+                </div>
+                <div class="btn-lg btn-lg-cyan" onclick="getSamples()">
+                  <span>Train With</span>
+                  <h2>Samples</h2>
+                </div>
+                <div class="btn-lg btn-lg-blue" onclick="getActions()">
+                  <span>Edit</span>
+                  <h2>Actions</h2>
+                </div>
+              </div>
+
+            </div>
+      </div>
+
+</body>
+<script>
+  
+  let assistant_sid = "{{assistant.sid}}";
+  let task_sid = "{{task.sid}}";
+
+  function getSamples() {
+    location.href='/assistant/' + assistant_sid + '/task/' + task_sid + '/samples/';
+  }
+
+  function getFields() {
+    location.href='/assistant/' + assistant_sid + '/task/' + task_sid + '/fields/';
+  }
+
+  function getActions() {
+    location.href='/assistant/' + assistant_sid + '/task/' + task_sid + '/actions/';
+  }
+
+  function deleteTask() {
+    if (confirm("Are you sure that you want to delete this task?"))
+      location.href='/assistant/' + assistant_sid + '/task/delete/' + task_sid + '/';
+  }
+
+</script>
+</html>

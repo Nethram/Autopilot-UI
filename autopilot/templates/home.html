@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Maker : Home</title>
+    <link rel="shortcut icon" href="{% static 'images/logo.svg' %}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'styles/base.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{% static 'scripts/base.js' %}"></script>
+</head>
+<body>
+  
+  <nav class="navbar navbar-expand-lg navbar-dark bg-my-primary my-main-nav" id="top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img src="{% static 'images/logo.svg' %}" alt="Logo" class="d-inline-block align-text-top my-main-nav-logo">
+          <span class="upper">
+              <span class="text-my-aqua">Chatbot</span> <span>Maker</span>
+          </span>
+        </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="#">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Chatbot Name</th>
+        <th>Date Created</th>
+        <th>Date Updated</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+          
+      {% for assistant in assistants %}
+        <tr onclick="selectBot('{{assistant.sid}}')">
+          <td>{{assistant.unique_name}}</td>
+          <td>{{assistant.date_created}}</td>
+          <td>{{assistant.date_updated}}</td>
+          <td>
+            {% if assistant.development_stage == 'in-development' %}
+              In Development
+            {% else %}
+              In Production
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+
+  <button class="fab" onclick="openOverlay()">&plus;</button>
+
+  <div class="overlay">
+    <div class="pop-up">
+      <h2>Please Enter A Chatbot Name</h2>
+      <input type="text" class="input input-tag" id="prompt_input" placeholder="Unique Name">
+      <div>
+        <button class="my-btn my-btn-blue" onclick="createBot()">Create Bot</button>
+        <button class="my-btn my-btn-red" onclick="closeOverlay()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

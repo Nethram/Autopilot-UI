@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Maker : Dashboard</title>
+    <link rel="shortcut icon" href="{% static 'images/logo.svg' %}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'styles/base.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/dashboard_details.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/simulator.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{% static 'scripts/base.js' %}"></script>
+    <script src="{% static 'scripts/dashboard.js' %}"></script>
+    <script src="{% static 'scripts/simulator.js' %}"></script>
+</head>
+<body data-tab="{{tab}}">
+    
+  <nav class="navbar navbar-expand-lg navbar-dark bg-my-primary my-main-nav" id="top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img src="{% static 'images/logo.svg' %}" alt="Logo" class="d-inline-block align-text-top my-main-nav-logo">
+          <span class="upper">
+              <span class="text-my-aqua">Chatbot</span> <span>Maker</span>
+          </span>
+        </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/home">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  
+  <div class="dashboard-side-bar">
+    <button class="dashboard-btn active-dashboard" id="home">{{assistant.unique_name}}</button>
+    <button class="dashboard-btn" id="tasks">Tasks</button>
+    <button class="dashboard-btn" id="fields">Field Types</button>
+    <button class="dashboard-btn" id="flow" onclick="getBotFlow()">Flow</button>
+    <button class="dashboard-btn" id="simulator">Simulator</button>
+    <button class="dashboard-btn" id="settings">Settings</button>
+  </div>
+
+  <div class="dashboard-tab-container">
+
+    <!-- home tab -->
+    <div class="tab-data active-tab" id="dashboard_home">
+      <div class="tab-data-title">
+          <h1>{{assistant.unique_name}}</h1>
+      </div>
+      <div class="tab-data-body">
+        <div class="detail">
+          <h4>Date Created</h4>
+          {{assistant.date_created}}
+        </div>
+        <div class="detail">
+          <h4>Last Updated</h4>
+          {{assistant.date_updated}}
+        </div>
+        <div class="detail">
+          <h4>Status</h4>
+          <span id="dev_stage">
+            {% if assistant.development_stage == 'in-development' %}
+              In Development
+            {% else %}
+              In Production
+            {% endif %}
+          </span>
+        </div>
+        <div class="detail build-section">
+          <button onclick="buildModel()" class="my-btn my-btn-blue">Build</button>
+          <span class="note">
+            {% if assistant.needs_model_build %}
+              Model needs a build
+            {% else %}
+              Model is up to date
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- task tab -->
+    <div class="tab-data" id="dashboard_tasks">
+      <div class="tab-data-title">
+        <h1>Tasks</h1>
+      </div>
+      <div class="tab-data-body">    
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Task Name</th>
+              <th>Samples</th>
+              <th>Fields</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr id="{{task.sid}}" onclick="selectTask(this.id)">
+                <td>{{task.unique_name}}</td>
+                {% for key, values in tasks_stats.items %}
+                  {% if key == task.sid %}
+                    {% for value in values %}
+                      <td>{{value}}</td>
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>  
+      </div>
+      <button class="fab" onclick="createTask()">&plus;</button>
+    </div>
+
+    <!-- field tab -->
+    <div class="tab-data" id="dashboard_fields">
+      <div class="tab-data-title">
+        <h1>Field Types</h1>
+      </div>
+      <div class="tab-data-body field-type-list">
+    
+        {% for field in fields %}
+          <div class="field-card">
+            <div class="field-card-title">
+              <h4>{{field.unique_name}}</h4>
+              <button class="my-btn my-btn-red" onclick="deleteFieldType('{{field.sid}}')">Delete</button>
+            </div>
+            <div class="field-card-body">
+              <div class="body-title">
+                <span class="text-secondary">Values</span>
+                <button class="sqr-btn grey-sqr-btn" onclick="createFieldValue('{{field.sid}}')">&plus;</button>
+              </div>
+              <div class="field-values-list">
+                {% for key, values in field_val.items %}
+                  {% if key == field.sid %}
+                    {% for value in values %}
+                      <div class="field-value-container">
+                        <span class="field-value">{{value.1}}</span>
+                        <button class="sqr-btn my-btn my-btn-red" onclick="deleteFieldValue('{{field.sid}}', '{{value.0}}')">&minus;</button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+            </div>
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+      <button class="fab" onclick="createFieldType()">&plus;</button>
+    </div>
+
+    <!-- simulator tab -->
+    <div class="tab-data" id="dashboard_simulator">
+      <div class="tab-data-title">
+        <h1>Simulator</h1>
+      </div>
+      <div class="tab-data-body">
+        <div class="simulator-container">
+          <div class="message-section"></div>
+          <div class="user-input-section">
+            <input type="text" placeholder="Enter Message Here">
+            <button></button>
+          </div>
+        </div>
+        <div id="side-container">
+          <div id="memory">
+            <span>Remember: {</span>
+              <ul id="remember"></ul>
+            <span>}</span>
+            <br><br>
+            <span>Collect: {</span>
+            <ul id="collect"></ul>
+            <span>}</span>
+            <br><br>
+            <span>Field: {</span>
+            <ul id="field"></ul>
+            <span>}</span>
+          </div>
+          <button class="start-over">Start Over</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- settings tab -->
+    <div class="tab-data" id="dashboard_settings">
+      <div class="tab-data-title tab-data-title-double">
+        <h1>{{assistant.unique_name}}</h1>
+        <button class="my-btn my-btn-red" onclick="deleteBot()">Delete</button>
+      </div>
+      <div class="tab-data-body">
+        <div class="detail">
+          <h4>Change Status</h4>
+          <div class="radio-grp">
+            <div>
+              <input type="radio" name="dev_status" id="radio_dev" value="In Development">
+              <label for="radio_dev">In Development</label>
+            </div>
+            <div>
+              <input type="radio" name="dev_status" id="radio_prd" value="In Production">
+              <label for="radio_prd">In Production</label>
+            </div>
+          </div>
+        </div>
+        <div class="detail rename-section">
+          <h4>Rename Chatbot</h4>
+          <input type="text" name="bot_name" class="input rename-bot input-tag" placeholder="Unique Bot Name" value="{{assistant.unique_name}}">
+        </div>
+        <div class="detail">
+          <button class="my-btn my-btn-blue" onclick="updateBot()">Save</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- overlay -->
+  <div class="overlay">
+    <div class="pop-up">
+      <h2 class="pop-up-title"></h2>
+      <input type="text" class="input input-tag" id="prompt_input" placeholder="Unique Name">
+      <div>
+        <button class="my-btn my-btn-blue ok_cancel" id="prompt_ok">Ok</button>
+        <button class="my-btn my-btn-red ok_cancel" id="prompt_cancel" onclick="closeOverlay()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+<script>
+
+  function createTask() {
+    openOverlay()
+    $('.pop-up-title').html('Please Enter A Unique Task Name');
+    $('#prompt_input').attr('placeholder', 'Unique Task Name');
+    $('#prompt_ok').attr('onClick', 'confirmTask()');
+  }
+
+  function createFieldType() {
+    openOverlay()
+    $('.pop-up-title').html('Please Enter A Unique Field Name');
+    $('#prompt_input').attr('placeholder', 'Unique Field Name');
+    $('#prompt_ok').attr('onClick', 'confirmFieldType()');
+  }
+
+  function createFieldValue(field_sid) {
+    openOverlay()
+    $('.pop-up-title').html('Please Enter A Unique Field Value');
+    $('#prompt_input').attr('placeholder', 'Unique Field Value');
+    $('#prompt_ok').attr('onClick', 'confirmFieldValue("'+ field_sid + '")');
+  }
+
+  function deleteBot() {
+    openOverlay()
+    $('.pop-up-title').html("To Confirm Assistant Deletion, Please Enter Chatbot's Unique Name");
+    $('#prompt_input').attr('placeholder', 'Chatbot Name');
+    $('#prompt_ok').attr('onClick', 'confirmDeleteBot()');
+  }
+ 
+  assistant_sid = "{{assistant.sid}}";
+
+  const confirmTask = () => {
+    let unique_name = $('#prompt_input').val().trim();
+    if (unique_name !== null && unique_name !== "" && checkSpclChars(unique_name))
+      location.href = `/assistants/${assistant_sid}/tasks/create/${unique_name}/`;
+  }
+  
+  const confirmFieldType = () => {
+    let unique_name = $('#prompt_input').val().trim();
+    if (unique_name !== null && unique_name !== "" && checkSpclChars(unique_name))
+      location.href = `/assistants/${assistant_sid}/field_type/create/${unique_name}/`;
+  }
+  
+  const confirmFieldValue = field_sid => {
+    let unique_value = $('#prompt_input').val().trim();
+    if (unique_value !== null && unique_value !== "")
+      location.href = `/assistants/${assistant_sid}/field_type/${field_sid}/create/${unique_value}/`;
+  }
+
+  const confirmDeleteBot = () => {
+    let response = $('#prompt_input').val().trim();
+    if (response.toLowerCase() === "{{assistant.unique_name}}".toLowerCase())
+      location.href = "{% url 'delete_assistant' assistant.unique_name %}"
+    else
+      return alert('Chatbot name not matching')
+  }
+  
+  const deleteFieldType = field_sid => {
+    if (confirm("Are you sure that you want to delete this field type?"))
+      location.href = `/assistants/${assistant_sid}/field_type/delete/${field_sid}/`;
+  }
+  
+  const deleteFieldValue = (field_sid, field_val_sid) => {
+    if (confirm("Are you sure that you want to delete this field value?"))
+      location.href = `/assistants/${assistant_sid}/field_type/${field_sid}/delete/${field_val_sid}/`;
+  }
+
+  const updateBot = () => {
+    let unique_name = $(".rename-bot").val().trim();
+    let dev_stage = $('input[name="dev_status"]:checked').val()[3];
+    if (unique_name !== null && unique_name !== "" && checkSpclChars(unique_name))
+      location.href = `/assistants/update/${assistant_sid}/${unique_name}/${dev_stage}/`;
+    else
+      $(".rename-bot").focus();
+  }
+
+  const getBotFlow = () => location.href = `/assistant/${assistant_sid}/flow/`;
+  const buildModel = () => location.href = `/assistant/build/${assistant_sid}/`;
+  const selectTask = task => location.href = `../../assistant/${assistant_sid}/task/${task}/`;
+  
+
+</script>
+</html>

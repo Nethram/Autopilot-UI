@@ -120,7 +120,9 @@ const performSimulation = response => {
                         appendMessage(Object.values(action)[0]);
                         break;
                     case 'listen':
-                        taskLimit = Object.values(action)[0].tasks.toString();
+                        taskLimit = Object.values(action)[0];
+                        if (taskLimit !== true)
+                            taskLimit = Object.values(action)[0].tasks.toString();
                         listener = true;
                         break;
                     case 'remember':
